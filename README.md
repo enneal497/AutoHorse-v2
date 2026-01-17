@@ -8,8 +8,8 @@ This is a basic plugin template using CommonLibSSE-NG.
 
 ## Getting Started
 ```bat
-git clone --recurse-submodules https://github.com/enneal497/commonlibsse-ng-template
-cd commonlibsse-ng-template
+git clone --recurse-submodules https://github.com/enneal497/AutoHorse-v2
+cd AutoHorse-v2
 ```
 
 ### Setup
@@ -19,7 +19,7 @@ If you want to redirect the build output, set one of or both of the following en
 
 To set up the project, run:
 ```bat
-xmake lua setup.lua MyPluginName
+xmake lua setup.lua AutoHorse
 ```
 
 ### Build
