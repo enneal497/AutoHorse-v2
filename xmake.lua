@@ -7,7 +7,7 @@ includes("lib/CLibUtil")
 
 -- set project
 set_project("AutoHorse")
-set_version("0.0.0")
+set_version("1.2.0")
 set_license("GPL-3.0")
 
 -- set defaults
