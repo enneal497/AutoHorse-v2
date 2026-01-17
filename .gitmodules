@@ -1,0 +1,7 @@
+[submodule "lib/commonlibsse-ng"]
+	path = lib/commonlibsse-ng
+	url = https://github.com/alandtse/CommonLibVR.git
+	branch = ng
+[submodule "lib/CLibUtil"]
+	path = lib/CLibUtil
+	url = https://github.com/enneal497/CLibUtil
