@@ -1,7 +1,7 @@
 #include "InputEventHandler.h"
 #include "Settings.h"
 #include "Events.h"
-//#include "Hooks.h"
+#include "Hooks.h"
 
 bool bPluginAllowed = true;
 
@@ -20,7 +20,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
         }
 
         Settings::LoadSettings();
-        //Hooks::Install();
+        Hooks::Install();
 
         InputEventHandler::Register();
         Events::ActivateEventHandler::Register();
@@ -29,7 +29,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
         logger::info("");
     }
     else if (message->type == SKSE::MessagingInterface::kSaveGame) {
-        InputEventHandler::GetSingleton()->ForceStopAutopilot();
+        InputEventHandler::GetSingleton()->ForceStopAutopilot;
         return;
     }
 }
@@ -37,6 +37,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 {
 	SKSE::Init(a_skse);
+    SKSE::AllocTrampoline(42);
 
 	const auto plugin{ SKSE::PluginDeclaration::GetSingleton() };
     const auto name{ plugin->GetName() };

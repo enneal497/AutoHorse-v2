@@ -27,6 +27,7 @@ void InputEventHandler::Register() {
 }
 
 void InputEventHandler::StartAutopilot() {
+    logger::info("StartAutopilot called");
     if (!MarkerHandler::GetMarker()) {
         return;
     }
@@ -51,24 +52,34 @@ void InputEventHandler::StartAutopilot() {
     player->SetAIDriven(true);
     mount.get()->EvaluatePackage(true, false);
 
-
+    logger::info("StartAutopilot complete");
 }
 
 void InputEventHandler::ForceStopAutopilot() {
     logger::info("ForceStopAutopilot called");
-    if (!isPaused && g_isReady->value == 0.0f) {
-        logger::info("Nothing to do, exiting function");
-        return; 
-    }
+    //if (!isPaused && g_isReady->value == 0.0f) {
+    //    logger::info("Nothing to do, exiting function");
+    //    return; 
+    //}
     isPaused = false;
     isActive = false;
-    logger::info("ForceStop setup complete, calling StopAutopilot");
-    StopAutopilot(false);
+    g_isReady->value = 0.0f;
+
+    auto* player = RE::PlayerCharacter::GetSingleton();
+    auto mount = InputEventHandler::GetSingleton()->mount;
+    if (mount) {
+        mount.get()->SetPlayerControls(true);
+        mount.get()->EnableAI(true);
+        mount.get()->EvaluatePackage();
+    }
+    player->SetAIDriven(false);
+    controlQuest->Stop();
+    mount.reset();
 }
 
 void InputEventHandler::StopAutopilot(bool dismount) {
     logger::info("StopAutopilot called");
-    if (controlQuest->IsRunning()) {
+    if (!controlQuest->IsStopped()) {
         auto* player = RE::PlayerCharacter::GetSingleton();
         auto mount = InputEventHandler::GetSingleton()->mount;
 
@@ -77,13 +88,13 @@ void InputEventHandler::StopAutopilot(bool dismount) {
         }
 
         g_isReady->value = 0.0f;
-        mount->SetPlayerControls(true);
-        mount->EnableAI(true);
-        mount->EvaluatePackage();
+        mount.get()->SetPlayerControls(true);
+        mount.get()->EnableAI(true);
+        mount.get()->EvaluatePackage();
         player->SetAIDriven(false);
 
         if (dismount) {
-            mount->ActivateRef(player->AsReference(), 0, nullptr, 0, true);
+            mount.get()->ActivateRef(player->AsReference(), 0, nullptr, 0, true);
         }
 
         controlQuest->Stop();
@@ -91,6 +102,7 @@ void InputEventHandler::StopAutopilot(bool dismount) {
         mount.reset();
     }
     logger::info("StopAutopilot complete");
+    logger::info("");
 }
 
 //Is player currently under AI control
@@ -116,13 +128,24 @@ RE::BSEventNotifyControl InputEventHandler::ProcessEvent(RE::InputEvent* const* 
         Settings::GetMappedControls(a_event[0]->GetDevice());
     }
 
+    //logger::info("isActive: {}, controlQuest->IsStopped(): {}, controlQuest->IsStopping(): {}",
+    //    isActive, controlQuest->IsStopped(), controlQuest->IsStopping());
+
     mount.reset();
     if (!player->GetMount(mount)) {
-        if (isActive) { ForceStopAutopilot(); }
+        if (isActive || !(isPaused || controlQuest->IsStopped() || controlQuest->IsStopping()) || player->GetActorRuntimeData().movementController.get()->GetAIDriven()) {
+            logger::error("Error, trying to stop autopilot...");
+            ForceStopAutopilot(); 
+        }
         return RE::BSEventNotifyControl::kContinue;
     }
 
-    logger::info("InputEventHandler Line 124");
+    
+    if (!isPaused && isActive == (controlQuest->IsStopped() || controlQuest->IsStopping())) {
+        logger::error("State mismatch, trying to stop autopilot...");
+        ForceStopAutopilot();
+        return RE::BSEventNotifyControl::kContinue;
+    }
 
     for (auto event = *a_event; event; event = event->next) {
         if (const auto button = event->AsButtonEvent(); button) {
@@ -145,7 +168,7 @@ RE::BSEventNotifyControl InputEventHandler::ProcessEvent(RE::InputEvent* const* 
                         ForceStopAutopilot();
                         return RE::BSEventNotifyControl::kContinue;
                     }
-                    if (player->GetCurrentPackage()) {
+                    if (player->GetActorRuntimeData().movementController.get()->GetAIDriven()) {
                         //Player under AI control
                         return RE::BSEventNotifyControl::kContinue;
                     }
@@ -164,9 +187,9 @@ RE::BSEventNotifyControl InputEventHandler::ProcessEvent(RE::InputEvent* const* 
                 // Stop autopilot and dismount
                 if (isPressed && isActive) {
                     logger::info("Stop autopilot and dismount");
-                    StopAutopilot(true);
                     isPaused = false;
                     isActive = false;
+                    StopAutopilot(true);
                     return RE::BSEventNotifyControl::kContinue;
                 }
             }
@@ -188,7 +211,9 @@ RE::BSEventNotifyControl InputEventHandler::ProcessEvent(RE::InputEvent* const* 
                 if (key == Settings::ReturnControls(KeyType::Forward) || key == Settings::ReturnControls(KeyType::Back)) {
                     // Stop autopilot
                     if (isPressed && isActive) {
-                        ForceStopAutopilot();
+                        isActive = false;
+                        isPaused = false;
+                        StopAutopilot(false);
                         return RE::BSEventNotifyControl::kContinue;
                     }
                 }
@@ -232,7 +257,9 @@ RE::BSEventNotifyControl InputEventHandler::ProcessEvent(RE::InputEvent* const* 
                 else if (key == Settings::ReturnControls(KeyType::AutoMoveKey)) {
                     //Switch off autopilot
                     if (isPressed && isActive) {
-                        ForceStopAutopilot();
+                        isActive = false;
+                        isPaused = false;
+                        StopAutopilot(false);
                         return RE::BSEventNotifyControl::kStop;
                     }
                 }
@@ -252,7 +279,9 @@ RE::BSEventNotifyControl InputEventHandler::ProcessEvent(RE::InputEvent* const* 
 
             if (abs(y) > Settings::thumbstickThreshold) {
                 // Stop autopilot
-                ForceStopAutopilot();
+                isPaused = false;
+                isActive = false;
+                StopAutopilot(false);
                 continue;
             }
             if (abs(x) > Settings::thumbstickThreshold) {
