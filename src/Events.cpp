@@ -1,6 +1,7 @@
 #include "Events.h"
 #include "Utility.h"
 #include "InputEventHandler.h"
+#include "Settings.h"
 
 void SetMarkerDiscovered(RE::TESObjectREFR* marker) {
 
@@ -53,13 +54,21 @@ namespace Events
         if (!a_event) {
             return RE::BSEventNotifyControl::kContinue;
         }
-        if (a_event->actionRef.get() != RE::PlayerCharacter::GetSingleton()) {
+        auto player = RE::PlayerCharacter::GetSingleton();
+        if (a_event->actionRef.get() != player) {
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        if (Settings::bRequireClairvoyance && !Utility::IsSpellEquipped(Settings::clairvoyanceID)) {
             return RE::BSEventNotifyControl::kContinue;
         }
 
         if (a_event->objectActivated.get()->GetBaseObject()->HasKeywordByEditorID("ActorTypeHorse")) {
             logger::info("Player activated horse");
-            Utility::ShowPrompt();
+            if (!player->IsOnMount()) {
+                Utility::ShowPrompt();
+            }
+            
         }
 
         return RE::BSEventNotifyControl::kContinue;

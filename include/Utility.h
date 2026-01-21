@@ -7,4 +7,6 @@ namespace Utility {
     void ShowPrompt();
     void HidePrompt();
     void ForceMountToAlias(RE::ActorPtr a_actor);
+
+    bool IsSpellEquipped(RE::FormID spellID);
 }

@@ -12,6 +12,7 @@ namespace Settings
 
         //Load global settings
         ReadBoolSetting(ini, "General", "bShowTutorial", (bool&)bShowTutorial);
+        ReadBoolSetting(ini, "General", "bRequireClairvoyance", (bool&)bRequireClairvoyance);
 
         ReadUInt32Setting(ini, "Keyboard", "StartKey", (uint32_t&)KStart);
         ReadUInt32Setting(ini, "GamePad", "StartKey", (uint32_t&)GStart);
@@ -25,9 +26,10 @@ namespace Settings
         Settings::GetMappedControls(RE::INPUT_DEVICE::kKeyboard);
 
         logger::info("bShowTutorial?: {}", bShowTutorial);
-        if (bShowTutorial == false) {
+        if (!bShowTutorial) {
             RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESGlobal>(g_tutorialID, espName)->value = 1;
         }
+        logger::info("bRequireClairvoyance?: {}", bRequireClairvoyance);
 
         logger::info("Loaded settings");
         logger::info("");

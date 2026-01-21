@@ -72,4 +72,18 @@ namespace Utility {
         ForceRefToAlias(quest, aliasID, actorRef);
     }
 
+    bool IsSpellEquipped(RE::FormID spellID)
+    {
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        auto actorBase = static_cast<RE::Actor*>(player);
+
+        auto leftForm = actorBase->GetEquippedObject(true);
+        auto rightForm = actorBase->GetEquippedObject(false);
+        if ((leftForm && leftForm->formID == spellID) || (rightForm && rightForm->formID == spellID)) {
+            return true;
+        }
+
+        return false;
+    }
+
 }

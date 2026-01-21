@@ -29,7 +29,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
         logger::info("");
     }
     else if (message->type == SKSE::MessagingInterface::kSaveGame) {
-        InputEventHandler::GetSingleton()->ForceStopAutopilot;
+        InputEventHandler::GetSingleton()->ForceStopAutopilot();
         return;
     }
 }

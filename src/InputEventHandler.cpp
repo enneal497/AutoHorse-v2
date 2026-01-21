@@ -30,12 +30,15 @@ void InputEventHandler::StartAutopilot() {
     logger::info("StartAutopilot called");
     if (!MarkerHandler::GetMarker()) {
         return;
-    }
+    }    
 
     auto* player = RE::PlayerCharacter::GetSingleton();
     auto mount = InputEventHandler::GetSingleton()->mount;
 
     if (!isPaused) {
+        if (Settings::bRequireClairvoyance && !Utility::IsSpellEquipped(Settings::clairvoyanceID)) {
+            return;
+        }
         isWalking = false;
         g_tutorial->value = 1.0f;
     }
